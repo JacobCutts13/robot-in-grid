@@ -50,40 +50,46 @@ function NEXT_MOVE(GRID, POSITION, MOVES)
  */
 
 function Move(grid: Grid, position: Position, path: Path, startPos: Position, targetPos: Position): Path | null{
-
+  //reached target!
   if(position.x === targetPos.x && position.y === targetPos.y){
-    return path.slice(1);  
+    return path;  
   }
+  //keep moving
   else{ 
-  if(cellAt({x: position.x + 1, y: position.y}, grid) === "."){
-    position.x += 1
-    const newPos = {x: position.x, y: position.y}
-    path.push(["right", newPos]);
-  }
-  else if(cellAt({x: position.x, y: position.y + 1}, grid) === "."){
-    position.y += 1
-    const newPos = {x: position.x, y: position.y}
-    path.push(["down", newPos]);
-  }
-  else{ 
-      if(position.x === startPos.x && position.y === startPos.y){
-      return null
+    //can we move right
+    if(cellAt({x: position.x + 1, y: position.y}, grid) === "."){
+      position.x += 1
+      const newPos = {x: position.x, y: position.y}
+      path.push(["right", newPos]);
     }
-    else{
-      grid.rows[position.y][position.x] = "x"; //remove square
-      position.x = path[path.length -2][1].x;
-      position.y = path[path.length -2][1].y;
-      path.pop();
+    //can we move down
+    else if(cellAt({x: position.x, y: position.y + 1}, grid) === "."){
+      position.y += 1
+      const newPos = {x: position.x, y: position.y}
+      path.push(["down", newPos]);
+    }
+    //can't move right or down
+    else{ 
+      //if we backtracked to start then no solution return null
+        if(position.x === startPos.x && position.y === startPos.y){
+        return null
       }
+      //backtrack
+      else{
+        grid.rows[position.y][position.x] = "x"; //remove square
+        position.x = path[path.length -2][1].x; //move back 
+        position.y = path[path.length -2][1].y;
+        path.pop(); //remove previous move from path
+        }
+      }
+    return Move(grid, position, path, startPos, targetPos); //find next move from new position
     }
-  return Move(grid, position, path, startPos, targetPos);
-  }
 }
 
 export function solve(grid: Grid): Path | null {
   const targetPos = getBottomRightPosition(grid);
   const startPos = getTopLeftPosition(grid);
-  const moveStartPos = {x: startPos.x, y: startPos.y}
-  const answer = Move(grid, moveStartPos, [["right", {x: startPos.x, y: startPos.y}]], startPos, targetPos);
+  const moveStartPos = {x: startPos.x, y: startPos.y} //creating copy to prevent aliasing
+  const answer = Move(grid, moveStartPos, [], startPos, targetPos);
   return answer;
 }
